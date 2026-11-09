@@ -1,0 +1,6 @@
+{
+  "_NOTICE": "Expected outcomes for SYNTHETIC fixtures only",
+  "SYNTHETIC-ONLY-baseline.json": "EXPECTED_ENDPOINT_READY",
+  "SYNTHETIC-ONLY-fault.json": "PORT_MISMATCH_SUPPORTED",
+  "SYNTHETIC-ONLY-recovery.json": "EXPECTED_ENDPOINT_READY"
+}

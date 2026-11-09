@@ -1,0 +1,20 @@
+[Unit]
+Description=Failure Lab Experiment 01 HTTP Test Service
+After=network.target
+
+[Service]
+Type=simple
+User=nobody
+WorkingDirectory=/opt/failurelab/experiment01
+EnvironmentFile=/etc/failurelab/experiment01.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 /opt/failurelab/experiment01/app.py
+Restart=on-failure
+RestartSec=1
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

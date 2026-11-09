@@ -1,0 +1,8 @@
+# Example only: use a disposable test host and a local private inventory.
+# 192.0.2.10 is an RFC 5737 documentation IP, not a real target.
+[lab_rocky]
+lab-node-a ansible_host=192.0.2.10 ansible_user=labuser
+
+[lab_rocky:vars]
+ansible_connection=ssh
+ansible_python_interpreter=/usr/bin/python3

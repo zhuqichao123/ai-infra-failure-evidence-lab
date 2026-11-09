@@ -1,0 +1,11 @@
+{
+  "_NOTICE": "SYNTHETIC TEST FIXTURE; NOT EXPERIMENT OBSERVATION",
+  "evidence_class": "SYNTHETIC",
+  "schema": "failurelab.exp01.ansible.v1",
+  "stage": "recovery",
+  "systemd_show": "LoadState=loaded\nActiveState=active\nSubState=running\nMainPID=303",
+  "config": "LISTEN_PORT=8080",
+  "sockets": "LISTEN 0 5 0.0.0.0:8080 0.0.0.0:*",
+  "expected_http": {"status": 200, "json": {"ready": true, "port": 8080, "path": "/readyz"}},
+  "alternate_http": {"status": -1, "msg": "Connection refused"}
+}

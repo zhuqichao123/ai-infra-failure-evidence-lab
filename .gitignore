@@ -1,0 +1,18 @@
+# Do not commit observed/raw evidence, live inventory, credentials or caches.
+evidence/
+runs/
+private/
+freezes/
+ansible/hosts.ini
+*.pem
+*.key
+id_ed25519*
+*.p12
+*.pfx
+*.vhdx
+*.iso
+*.zip
+__pycache__/
+*.pyc
+.venv/
+.DS_Store

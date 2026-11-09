@@ -1,0 +1,112 @@
+---
+# READ-ONLY with respect to managed system configuration.
+# It runs commands/HTTP GETs on the Linux VM and writes a JSON artifact ONLY to the controller.
+- name: Collect experiment 01 service-readiness diagnostic signals
+  hosts: lab_rocky
+  gather_facts: false
+  become: false
+  vars:
+    stage: fault
+    artifact_dir: "{{ playbook_dir }}/../evidence/ansible"
+    service_name: failurelab-exp01.service
+  tasks:
+    - name: Read UTC clock on target
+      ansible.builtin.command: date -u +%Y-%m-%dT%H:%M:%SZ
+      register: clock_result
+      changed_when: false
+
+    - name: Read systemd state
+      ansible.builtin.command: "systemctl show {{ service_name }} -p LoadState -p ActiveState -p SubState -p MainPID -p ExecMainStartTimestamp"
+      register: systemd_result
+      changed_when: false
+      failed_when: false
+
+    - name: Read test service configuration
+      ansible.builtin.command: cat /etc/failurelab/experiment01.env
+      register: config_result
+      changed_when: false
+      failed_when: false
+
+    - name: Read TCP socket table
+      ansible.builtin.command: ss -H -ltn
+      register: ss_result
+      changed_when: false
+      failed_when: false
+
+    - name: Probe expected local endpoint on TCP 8080
+      ansible.builtin.uri:
+        url: http://127.0.0.1:8080/readyz
+        method: GET
+        status_code: 200
+        timeout: 4
+        use_proxy: false
+        return_content: true
+      register: expected_http
+      failed_when: false
+      changed_when: false
+
+    - name: Probe alternate local endpoint on TCP 8081
+      ansible.builtin.uri:
+        url: http://127.0.0.1:8081/readyz
+        method: GET
+        status_code: 200
+        timeout: 4
+        use_proxy: false
+        return_content: true
+      register: alternate_http
+      failed_when: false
+      changed_when: false
+
+    - name: Read recent service journal
+      ansible.builtin.command: journalctl -u failurelab-exp01.service -n 25 --no-pager -o short-iso-precise
+      register: journal_result
+      changed_when: false
+      failed_when: false
+
+    - name: Ensure controller-side artifact directory exists
+      ansible.builtin.file:
+        path: "{{ artifact_dir }}"
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+      become: false
+
+    - name: Write normalized JSON on controller (never on target)
+      ansible.builtin.copy:
+        dest: "{{ artifact_dir }}/{{ inventory_hostname }}-{{ stage }}.json"
+        mode: '0644'
+        content: |
+          {{
+            {
+              'schema': 'failurelab.exp01.ansible.v1',
+              'evidence_class': 'LOCAL-REPRODUCED when actually collected; fault is SYNTHETIC injection',
+              'stage': stage,
+              'target': inventory_hostname,
+              'target_utc': clock_result.stdout | default(''),
+              'expected_port': 8080,
+              'service_name': service_name,
+              'systemd_show': systemd_result.stdout | default(''),
+              'systemd_rc': systemd_result.rc | default(-1),
+              'config': config_result.stdout | default(''),
+              'config_rc': config_result.rc | default(-1),
+              'sockets': ss_result.stdout | default(''),
+              'sockets_rc': ss_result.rc | default(-1),
+              'expected_http': {
+                'status': expected_http.status | default(-1),
+                'msg': expected_http.msg | default(''),
+                'json': expected_http.json | default({}),
+                'content': expected_http.content | default('')
+              },
+              'alternate_http': {
+                'status': alternate_http.status | default(-1),
+                'msg': alternate_http.msg | default(''),
+                'json': alternate_http.json | default({}),
+                'content': alternate_http.content | default('')
+              },
+              'journal_rc': journal_result.rc | default(-1),
+              'journal': journal_result.stdout | default(''),
+              'collector_scope': 'target read-only commands + GET; controller-only artifact write'
+            } | to_nice_json
+          }}
+      delegate_to: localhost
+      become: false

@@ -1,0 +1,10 @@
+{
+  "_NOTICE": "SYNTHETIC WINDOWS OBSERVER STUB; NOT EXPERIMENT OBSERVATION",
+  "evidence_class": "SYNTHETIC",
+  "schema": "failurelab.exp01.host_snapshot.v1",
+  "stage": "fault",
+  "vm_running": true,
+  "ssh_collector_ok": true,
+  "http_8080": {"ready": false},
+  "http_8081": {"ready": true}
+}
